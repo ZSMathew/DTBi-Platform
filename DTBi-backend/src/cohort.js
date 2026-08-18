@@ -1,0 +1,6 @@
+{
+  "name"; "DTBi 2026 Technology Cohort",
+  "description"; "Technology startups participating in the DTBi 2026 incubation program",
+  "start_date"; "2026-08-01",
+  "end_date"; "2026-12-31"
+};
