@@ -5,10 +5,25 @@ const {
   getStartups
 } = require("../controllers/startupController");
 
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-router.post("/", createStartup);
+// Only administrators can create startups
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin"),
+  createStartup
+);
 
-router.get("/", getStartups);
+// Admins, investors and startups can view startups
+router.get(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "investor", "startup"),
+  getStartups
+);
 
 module.exports = router;

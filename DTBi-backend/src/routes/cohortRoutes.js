@@ -6,12 +6,33 @@ const {
   getCohortById
 } = require("../controllers/cohortController");
 
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-router.post("/", createCohort);
+// Only admins can create cohorts
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin"),
+  createCohort
+);
 
-router.get("/", getCohorts);
+// Admins and investors can view all cohorts
+router.get(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "investor"),
+  getCohorts
+);
 
-router.get("/:id", getCohortById);
+// Admins and investors can view one cohort
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("admin", "investor"),
+  getCohortById
+);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 {
-  "name": "ABC Ventures",
-  "email": "contact@abcventures.com",
-  "organization": "ABC Ventures Ltd",
-  "investment_interest": "Technology, Agriculture and FinTech startups"
+  "full_name": "ABC Ventures Investor",
+  "email": "investor@abcventures.com",
+  "password": "Investor@12345",
+  "role": "investor"
 }

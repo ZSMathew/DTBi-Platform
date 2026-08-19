@@ -5,10 +5,25 @@ const {
   getInvestments
 } = require("../controllers/investmentController");
 
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-router.post("/", createInvestment);
+// Admins and investors can create investments
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "investor"),
+  createInvestment
+);
 
-router.get("/", getInvestments);
+// Admins and investors can view investments
+router.get(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "investor"),
+  getInvestments
+);
 
 module.exports = router;

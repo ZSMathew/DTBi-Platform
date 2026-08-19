@@ -13,7 +13,6 @@ const uploadCSV = async (req, res) => {
 
     const fileName = req.file.originalname;
     const filePath = req.file.path;
-
     const rows = [];
 
     fs.createReadStream(filePath)
@@ -23,7 +22,6 @@ const uploadCSV = async (req, res) => {
       })
       .on("end", async () => {
         try {
-
           if (rows.length === 0) {
             fs.unlinkSync(filePath);
 
@@ -60,16 +58,13 @@ const uploadCSV = async (req, res) => {
 
           let successfulRecords = 0;
           let failedRecords = 0;
-
           const errors = [];
 
           for (let i = 0; i < rows.length; i++) {
-
             const row = rows[i];
             const rowNumber = i + 2;
 
             if (!row.name || row.name.trim() === "") {
-
               failedRecords++;
 
               errors.push({
@@ -84,7 +79,6 @@ const uploadCSV = async (req, res) => {
               row.founded_year &&
               !/^\d{4}$/.test(row.founded_year.trim())
             ) {
-
               failedRecords++;
 
               errors.push({
@@ -96,7 +90,6 @@ const uploadCSV = async (req, res) => {
             }
 
             try {
-
               await pool.query(
                 `INSERT INTO startups
                 (
@@ -121,9 +114,7 @@ const uploadCSV = async (req, res) => {
               );
 
               successfulRecords++;
-
             } catch (rowError) {
-
               failedRecords++;
 
               let reason = "Failed to insert startup";
@@ -151,16 +142,18 @@ const uploadCSV = async (req, res) => {
             (
               file_name,
               file_type,
+              uploaded_by,
               total_records,
               successful_records,
               failed_records,
               upload_status
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *`,
             [
               fileName,
               "CSV",
+              req.user.id,
               rows.length,
               successfulRecords,
               failedRecords,
@@ -170,7 +163,7 @@ const uploadCSV = async (req, res) => {
 
           fs.unlinkSync(filePath);
 
-          res.status(201).json({
+          return res.status(201).json({
             success: true,
             message: "CSV processed successfully",
             upload: uploadResult.rows[0],
@@ -178,44 +171,81 @@ const uploadCSV = async (req, res) => {
           });
 
         } catch (error) {
-
           console.error("CSV processing error:", error);
 
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
 
-          res.status(500).json({
+          return res.status(500).json({
             success: false,
             message: "Failed to process CSV file"
           });
         }
       })
       .on("error", (error) => {
-
         console.error("CSV parsing error:", error);
 
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
 
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: "Invalid CSV file"
         });
       });
 
   } catch (error) {
-
     console.error("Upload error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "CSV upload failed"
     });
   }
 };
 
+
+const getUploads = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        du.id,
+        du.file_name,
+        du.file_type,
+        du.uploaded_by,
+        u.full_name AS uploaded_by_name,
+        u.email AS uploaded_by_email,
+        du.total_records,
+        du.successful_records,
+        du.failed_records,
+        du.upload_status,
+        du.uploaded_at
+      FROM data_uploads du
+      LEFT JOIN users u
+        ON du.uploaded_by = u.id
+      ORDER BY du.id DESC`
+    );
+
+    return res.json({
+      success: true,
+      count: result.rows.length,
+      data: result.rows
+    });
+
+  } catch (error) {
+    console.error("Error fetching uploads:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch uploads"
+    });
+  }
+};
+
+
 module.exports = {
-  uploadCSV
+  uploadCSV,
+  getUploads
 };
