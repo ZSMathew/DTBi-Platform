@@ -2,7 +2,9 @@ const express = require("express");
 
 const {
   getDashboardSummary,
-  getDashboardStartups
+  getDashboardStartups,
+  getInvestorDashboard,
+  getStartupDashboard
 } = require("../controllers/dashboardController");
 
 const authenticateToken = require("../middleware/authMiddleware");
@@ -10,7 +12,6 @@ const authorizeRoles = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-// Admins and investors can view the dashboard summary
 router.get(
   "/summary",
   authenticateToken,
@@ -18,12 +19,25 @@ router.get(
   getDashboardSummary
 );
 
-// Admins and investors can view dashboard startup data
 router.get(
   "/startups",
   authenticateToken,
   authorizeRoles("admin", "investor"),
   getDashboardStartups
+);
+
+router.get(
+  "/investor",
+  authenticateToken,
+  authorizeRoles("investor"),
+  getInvestorDashboard
+);
+
+router.get(
+  "/startup",
+  authenticateToken,
+  authorizeRoles("startup"),
+  getStartupDashboard
 );
 
 module.exports = router;
