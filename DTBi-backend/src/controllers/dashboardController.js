@@ -81,8 +81,8 @@ const getInvestorDashboard = async (req, res) => {
         investment_interest,
         created_at
       FROM investors
-      WHERE email = $1`,
-      [req.user.email]
+      WHERE user_id = $1`,
+      [req.user.id]
     );
 
     if (investorResult.rows.length === 0) {
